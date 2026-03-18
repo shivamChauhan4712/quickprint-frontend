@@ -12,29 +12,36 @@ export function LoginModal() {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = async (data) => {
-    try {
-      setServerError("");
-      const response = await api.post("/api/cafes/login", data);
+const onSubmit = async (data) => {
+  try {
+    setServerError("");
+    // 1. API Call
+    const response = await api.post("/api/cafes/login", data);
 
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("uniqueCode", response.data.uniqueCode);
-      localStorage.setItem("cafeName", response.data.cafeName);
+    // 2. Data check (Safe way)
+    if (response && response.data) {
+      const { token, uniqueCode, cafeName } = response.data;
+      
+      localStorage.setItem("token", token);
+      localStorage.setItem("uniqueCode", uniqueCode);
+      localStorage.setItem("cafeName", cafeName);
 
-      // to close the modal using bootstrap utility
+      // Modal close logic
       const modalElement = document.getElementById("loginModal");
       const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
       if (modalInstance) modalInstance.hide();
+      
       navigate("/dashboard");
-    } catch (err) {
-      // Backend error message or default fallback
-      setServerError(
-        err.response?.data?.message ||
-          err.response?.data ||
-          "Authentication failed. Please check your credentials.",
-      );
     }
-  };
+  } catch (err) {
+    console.error("Login Error:", err);
+
+    const errorMsg = err.response?.data?.message || 
+                     err.response?.data || 
+                     "Invalid email or password.";
+    setServerError(typeof errorMsg === 'string' ? errorMsg : "Login failed.");
+  }
+};
 
   return (
     <div
