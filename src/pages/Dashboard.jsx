@@ -27,7 +27,7 @@ export function Dashboard() {
   useEffect(() => {
     fetchFiles();
 
-    const socket = new SockJS('https://staci-nitrifiable-ila.ngrok-free.dev/ws-print');
+    const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws-print`);
     const stompClient = Stomp.over(socket);
 
     // Disable logging for a cleaner console (Optional)
