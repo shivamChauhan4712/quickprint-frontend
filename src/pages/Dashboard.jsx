@@ -33,26 +33,37 @@ export function Dashboard() {
     // Disable logging for a cleaner console (Optional)
     // stompClient.debug = null;
 
-    stompClient.connect({}, () => {
-      console.log("Connected to WebSocket");
+    stompClient.connect(
+      {},
+      () => {
+        console.log("Connected to WebSocket");
 
-      stompClient.subscribe(`/topic/cafe/${uniqueCode}`, (message) => {
-        // console.log("Real-time data received!", message.body);
-        const newFile = JSON.parse(message.body);
-        // Using functional update to ensure we have the latest state
-        setFiles((prevFiles) => {
-          // Check karein agar file ID pehle se list mein hai
-          const isDuplicate = prevFiles.find((file) => file.id === newFile.id);
+        stompClient.subscribe(`/topic/cafe/${uniqueCode}`, (message) => {
+          try {
+            if (message && message.body) {
+              const newFile = JSON.parse(message.body);
 
-          if (isDuplicate) {
-            return prevFiles; // Agar duplicate hai toh purani list hi rehne do
+              setFiles((prevFiles) => {
+                // Check for duplicates
+                const isDuplicate = prevFiles.some(
+                  (file) => file.id === newFile.id,
+                );
+                if (isDuplicate) return prevFiles;
+
+                console.log("New file received real-time:", newFile);
+                
+                return [newFile, ...prevFiles];
+              });
+            }
+          } catch (err) {
+            console.error("Error parsing socket message:", err);
           }
-          return [newFile, ...prevFiles]; // Agar nayi hai toh add karo
         });
-        // alert("New Print Request Received!");
-        console.log("New file received real-time:", newFile);
-      });
-    });
+      },
+      (error) => {
+        console.error("WebSocket Connection Error:", error);
+      },
+    );
 
     // Correct Cleanup Logic
     return () => {
