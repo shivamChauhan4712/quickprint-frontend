@@ -4,6 +4,7 @@ const api = axios.create({
   baseURL: API_URL, // spring boot port
   headers: {
     'Content-Type': 'application/json', 
+    'ngrok-skip-browser-warning': '69420',
   },
   withCredentials: true,
 
@@ -16,5 +17,7 @@ api.interceptors.request.use(config => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+}, error => {
+  return Promise.reject(error);
 });
 export default api;
