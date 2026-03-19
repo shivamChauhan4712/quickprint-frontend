@@ -27,7 +27,7 @@ export function Dashboard() {
   useEffect(() => {
     fetchFiles();
 
-    const socket = new SockJS(`http://192.168.1.139:8080/ws-print`);
+    const socket = new SockJS('https://staci-nitrifiable-ila.ngrok-free.dev/ws-print');
     const stompClient = Stomp.over(socket);
 
     // Disable logging for a cleaner console (Optional)
