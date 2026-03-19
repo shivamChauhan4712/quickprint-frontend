@@ -35,8 +35,12 @@ export function SignupModal() {
       if (response.status === 200 || response.status === 201) {
         // close Modal
         const modalElement = document.getElementById("signupModal");
-        const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
-        if (modalInstance) modalInstance.hide();
+        if (modalElement) {
+          const closeBtn = modalElement.querySelector(
+            '[data-bs-dismiss="modal"]',
+          );
+          if (closeBtn) closeBtn.click();
+        }
 
         Swal.fire({
           title: "Success!",
