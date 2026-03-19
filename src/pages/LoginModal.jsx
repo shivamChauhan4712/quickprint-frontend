@@ -12,36 +12,50 @@ export function LoginModal() {
     formState: { errors },
   } = useForm();
 
-const onSubmit = async (data) => {
-  try {
-    setServerError("");
-    // 1. API Call
-    const response = await api.post("/api/cafes/login", data);
+  const onSubmit = async (data) => {
+    try {
+      setServerError("");
+      const response = await api.post("/api/cafes/login", data);
 
-    // 2. Data check (Safe way)
-    if (response && response.data) {
-      const { token, uniqueCode, cafeName } = response.data;
-      
-      localStorage.setItem("token", token);
-      localStorage.setItem("uniqueCode", uniqueCode);
-      localStorage.setItem("cafeName", cafeName);
+      if (response?.data) {
+        // Destructure with fallback to avoid "undefined" issues
+        const { token = "", uniqueCode = "", cafeName = "" } = response.data;
 
-      // Modal close logic
-      const modalElement = document.getElementById("loginModal");
-      const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
-      if (modalInstance) modalInstance.hide();
-      
-      navigate("/dashboard");
+        if (!token) {
+          setServerError("Token not received from server.");
+          return;
+        }
+
+        localStorage.setItem("token", token);
+        localStorage.setItem("uniqueCode", uniqueCode);
+        localStorage.setItem("cafeName", cafeName);
+
+        // Modal handle logic
+        const closeButton = document.querySelector("#loginModal .btn-close");
+        if (closeButton) {
+          closeButton.click();
+        } else {
+          // Fallback: If button not found, clear modal manually
+          document.body.classList.remove("modal-open");
+          const backdrop = document.querySelector(".modal-backdrop");
+          if (backdrop) backdrop.remove();
+        }
+
+        setTimeout(() => {
+          console.log("Navigating to dashboard...");
+          navigate("/dashboard");
+        }, 500);
+      }
+    } catch (err) {
+      console.error("Login Error:", err);
+
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data ||
+        "Invalid email or password.";
+      setServerError(typeof errorMsg === "string" ? errorMsg : "Login failed.");
     }
-  } catch (err) {
-    console.error("Login Error:", err);
-
-    const errorMsg = err.response?.data?.message || 
-                     err.response?.data || 
-                     "Invalid email or password.";
-    setServerError(typeof errorMsg === 'string' ? errorMsg : "Login failed.");
-  }
-};
+  };
 
   return (
     <div
