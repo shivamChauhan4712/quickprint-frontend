@@ -51,7 +51,7 @@ export function Dashboard() {
                 if (isDuplicate) return prevFiles;
 
                 console.log("New file received real-time:", newFile);
-                
+
                 return [newFile, ...prevFiles];
               });
             }
@@ -220,9 +220,9 @@ export function Dashboard() {
       <Navbar />
 
       <div className="container py-4">
+        {/* Header Section*/}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="fw-bold text-dark">Recent Print Requests</h2>
-          {/* QR Code Trigger Button */}
           <button
             className="btn btn-dark shadow-sm"
             data-bs-toggle="modal"
@@ -232,90 +232,80 @@ export function Dashboard() {
           </button>
         </div>
 
-        <div className="card border-0 shadow-sm">
-          <div className="card-body p-0">
-            <div className="table-responsive">
-              <table className="table table-hover align-middle mb-0">
-                <thead className="table-primary text-white">
-                  <tr>
-                    <th>File Name</th>
-                    <th>Type</th>
-                    <th>Size</th>
-                    <th>Status</th>
-                    <th className="text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan="5" className="text-center py-4 text-muted">
-                        Loading files...
-                      </td>
-                    </tr>
-                  ) : files.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" className="text-center py-4 text-muted">
-                        No pending print requests.
-                      </td>
-                    </tr>
-                  ) : (
-                    files
-                      .filter((file) => file.status !== "DELETED")
-                      .map((file) => (
-                        <tr key={file.id}>
-                          <td className="fw-bold">{file.originalFileName}</td>
-                          <td>
-                            <span className="badge bg-secondary text-uppercase small">
-                              {file.fileType?.split("/")[1] || "FILE"}
-                            </span>
-                          </td>
-                          <td>{(file.fileSize / 1024).toFixed(2)} KB</td>
-                          <td>
-                            <span
-                              className={`badge ${file.status === "PENDING" ? "bg-warning" : "bg-success"}`}
-                            >
-                              {file.status}
-                            </span>
-                          </td>
-                          <td className="text-center">
-                            {/* Print/Preview Button */}
-                            <button
-                              className="btn btn-primary btn-sm me-2"
-                              onClick={() => handlePrint(file.id)}
-                              title="Print / View File"
-                            >
-                              <i className="bi bi-printer-fill me-1"></i> Print
-                            </button>
-
-                            {/* Download Button */}
-                            <button
-                              className="btn btn-outline-primary btn-sm me-2"
-                              onClick={() =>
-                                handleDownload(file.id, file.originalFileName)
-                              }
-                              title="Download File"
-                            >
-                              <i className="bi bi-download"></i>
-                            </button>
-
-                            {/* Delete Button */}
-                            <button
-                              className="btn btn-outline-danger btn-sm"
-                              onClick={() => handleDelete(file.id)}
-                              title="Delete File"
-                            >
-                              <i className="bi bi-trash"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                  )}
-                </tbody>
-              </table>
+        <div className="row g-4">
+          {loading ? (
+            <div className="col-12 text-center py-5">
+              <div className="spinner-border text-primary"></div>
+              <p className="mt-2 text-muted">Loading files...</p>
             </div>
-          </div>
+          ) : files.length === 0 ? (
+            <div className="col-12 text-center py-5">
+              <i className="bi bi-inbox text-muted h1"></i>
+              <p className="text-muted mt-2">No pending print requests.</p>
+            </div>
+          ) : (
+            files
+              .filter((file) => file.status !== "DELETED")
+              .map((file) => (
+                <div key={file.id} className="col-12 col-md-6 col-lg-4">
+                  <div className="card h-100 border-0 shadow-sm hover-shadow transition">
+                    <div className="card-body p-4">
+                      {/* Header: Icon + Name */}
+                      <div className="d-flex align-items-center mb-3">
+                        <div className="bg-primary bg-opacity-10 p-3 rounded-3 me-3 text-primary">
+                          <i className="bi bi-file-earmark-text h3 mb-0"></i>
+                        </div>
+                        <div className="overflow-hidden">
+                          <h6 className="fw-bold mb-0 text-truncate">
+                            {file.originalFileName}
+                          </h6>
+                          <small className="text-muted text-uppercase">
+                            {file.fileType?.split("/")[1] || "FILE"} •{" "}
+                            {(file.fileSize / 1024).toFixed(2)} KB
+                          </small>
+                        </div>
+                      </div>
+
+                      {/* Status Badge */}
+                      <div className="mb-4">
+                        <span
+                          className={`badge rounded-pill ${file.status === "PENDING" ? "bg-warning text-dark" : "bg-success"}`}
+                        >
+                          {file.status}
+                        </span>
+                      </div>
+
+                      {/* Footer: Action Buttons */}
+                      <div className="d-flex gap-2 border-top pt-3">
+                        <button
+                          className="btn btn-primary btn-sm flex-grow-1"
+                          onClick={() => handlePrint(file.id)}
+                        >
+                          <i className="bi bi-printer-fill me-1"></i> Print
+                        </button>
+                        <button
+                          className="btn btn-outline-dark btn-sm"
+                          onClick={() =>
+                            handleDownload(file.id, file.originalFileName)
+                          }
+                        >
+                          <i className="bi bi-download"></i>
+                        </button>
+                        <button
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => handleDelete(file.id)}
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+          )}
         </div>
-        {/* QR Code Modal */}
+
+        {/* QR Code Modal*/}
         <QRCodeModal
           uniqueCode={uniqueCode}
           cafeName={localStorage.getItem("cafeName")}
