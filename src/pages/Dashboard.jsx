@@ -359,44 +359,13 @@ export function Dashboard() {
               .map((file) => {
                 // fetching icon details based on file type
                 const fileInfo = getFileIcon(file.fileType);
-                const isImage = file.fileType?.toLowerCase().includes("image");
-                const previewUrl = `${import.meta.env.VITE_API_BASE_URL}/api/file/download/${file.id}`;
 
                 return (
                   <div key={file.id} className="col-12 col-md-6 col-lg-4">
                     <div className="card h-100 border-0 shadow-sm hover-shadow transition overflow-hidden">
-                      {/* --- PREVIEW SECTION (TOP) --- */}
-                      <div
-                        className="ratio ratio-16x9 bg-light d-flex align-items-center justify-content-center border-bottom"
-                        style={{ backgroundColor: "#f8f9fa" }}
-                      >
-                        {isImage ? (
-                          <img
-                            src={previewUrl}
-                            alt="preview"
-                            className="img-fluid object-fit-cover w-100 h-100"
-                            onError={(e) => {
-                              e.target.src =
-                                "https://placehold.co/400x225?text=Preview+Not+Available";
-                            }}
-                          />
-                        ) : (
-                          <div
-                            className={`w-100 h-100 d-flex flex-column align-items-center justify-content-center ${fileInfo.bg} bg-opacity-10`}
-                          >
-                            <i
-                              className={`bi ${fileInfo.icon} ${fileInfo.color} display-1`}
-                            ></i>
-                            <span
-                              className={`fw-bold mt-2 text-uppercase small ${fileInfo.color}`}
-                            >
-                              {file.fileType?.split("/")[1] || "FILE"}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
+                      {/* --- SIRF EK PREVIEW SECTION RAKHO --- */}
                       <div className="ratio ratio-16x9 bg-light d-flex align-items-center justify-content-center border-bottom">
+                        {/* Ab renderPreview handle karega ki image dikhani hai ya Google Viewer */}
                         {renderPreview(file)}
                       </div>
 
