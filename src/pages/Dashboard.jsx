@@ -215,12 +215,122 @@ export function Dashboard() {
       );
     }
   };
+
+  function getFileIcon(type) {
+    const fileType = type?.toLowerCase() || "";
+
+    // 1. Images (JPEG, PNG, WEBP, AVIF)
+    if (fileType.includes("image")) {
+      return {
+        icon: "bi-file-earmark-image-fill",
+        color: "text-info",
+        bg: "bg-info",
+      };
+    }
+    // 2. PDF
+    else if (fileType.includes("pdf")) {
+      return {
+        icon: "bi-file-earmark-pdf-fill",
+        color: "text-danger",
+        bg: "bg-danger",
+      };
+    }
+    // 3. Word (.doc, .docx, .rtf)
+    else if (
+      fileType.includes("word") ||
+      fileType.includes("officedocument.wordprocessingml") ||
+      fileType.includes("rtf")
+    ) {
+      return {
+        icon: "bi-file-earmark-word-fill",
+        color: "text-primary",
+        bg: "bg-primary",
+      };
+    }
+    // 4. Excel (.xls, .xlsx, csv)
+    else if (
+      fileType.includes("excel") ||
+      fileType.includes("spreadsheetml") ||
+      fileType.includes("csv") ||
+      fileType.includes("ms-excel")
+    ) {
+      return {
+        icon: "bi-file-earmark-spreadsheet-fill",
+        color: "text-success",
+        bg: "bg-success",
+      };
+    }
+    // 5. PowerPoint (.ppt, .pptx)
+    else if (
+      fileType.includes("presentationml") ||
+      fileType.includes("powerpoint")
+    ) {
+      return {
+        icon: "bi-file-earmark-ppt-fill",
+        color: "text-warning",
+        bg: "bg-warning",
+      };
+    }
+    // 6. Plain Text / Markdown
+    else if (fileType.includes("text") || fileType.includes("markdown")) {
+      return {
+        icon: "bi-file-earmark-text-fill",
+        color: "text-secondary",
+        bg: "bg-secondary",
+      };
+    }
+    // Default for others
+    else {
+      return {
+        icon: "bi-file-earmark-fill",
+        color: "text-dark",
+        bg: "bg-dark",
+      };
+    }
+  }
+
+  const renderPreview = (file) => {
+    const fileUrl = `${import.meta.env.VITE_API_BASE_URL}/api/file/download/${file.id}`;
+    const type = file.fileType?.toLowerCase() || "";
+    const fileInfo = getFileIcon(type); // Icon info yahan se le lenge
+
+    if (type.includes("image")) {
+      return (
+        <img
+          src={fileUrl}
+          className="img-fluid object-fit-cover h-100 w-100"
+          alt="preview"
+        />
+      );
+    }
+
+    if (
+      type.includes("pdf") ||
+      type.includes("word") ||
+      type.includes("spreadsheet") ||
+      type.includes("officedocument")
+    ) {
+      const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+      return (
+        <iframe
+          src={googleViewerUrl}
+          style={{ width: "100%", height: "100%", border: "none" }}
+          title="preview"
+        />
+      );
+    }
+
+    return (
+      <i className={`bi ${fileInfo.icon} display-1 ${fileInfo.color}`}></i>
+    );
+  };
+
   return (
     <div className="bg-light min-vh-100">
       <Navbar />
 
       <div className="container py-4">
-        {/* Header Section*/}
+        {/* Header Section */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="fw-bold text-dark">Recent Print Requests</h2>
           <button
@@ -246,66 +356,115 @@ export function Dashboard() {
           ) : (
             files
               .filter((file) => file.status !== "DELETED")
-              .map((file) => (
-                <div key={file.id} className="col-12 col-md-6 col-lg-4">
-                  <div className="card h-100 border-0 shadow-sm hover-shadow transition">
-                    <div className="card-body p-4">
-                      {/* Header: Icon + Name */}
-                      <div className="d-flex align-items-center mb-3">
-                        <div className="bg-primary bg-opacity-10 p-3 rounded-3 me-3 text-primary">
-                          <i className="bi bi-file-earmark-text h3 mb-0"></i>
-                        </div>
-                        <div className="overflow-hidden">
-                          <h6 className="fw-bold mb-0 text-truncate">
-                            {file.originalFileName}
-                          </h6>
-                          <small className="text-muted text-uppercase">
-                            {file.fileType?.split("/")[1] || "FILE"} •{" "}
-                            {(file.fileSize / 1024).toFixed(2)} KB
-                          </small>
-                        </div>
+              .map((file) => {
+                // fetching icon details based on file type
+                const fileInfo = getFileIcon(file.fileType);
+                const isImage = file.fileType?.toLowerCase().includes("image");
+                const previewUrl = `${import.meta.env.VITE_API_BASE_URL}/api/file/download/${file.id}`;
+
+                return (
+                  <div key={file.id} className="col-12 col-md-6 col-lg-4">
+                    <div className="card h-100 border-0 shadow-sm hover-shadow transition overflow-hidden">
+                      {/* --- PREVIEW SECTION (TOP) --- */}
+                      <div
+                        className="ratio ratio-16x9 bg-light d-flex align-items-center justify-content-center border-bottom"
+                        style={{ backgroundColor: "#f8f9fa" }}
+                      >
+                        {isImage ? (
+                          <img
+                            src={previewUrl}
+                            alt="preview"
+                            className="img-fluid object-fit-cover w-100 h-100"
+                            onError={(e) => {
+                              e.target.src =
+                                "https://placehold.co/400x225?text=Preview+Not+Available";
+                            }}
+                          />
+                        ) : (
+                          <div
+                            className={`w-100 h-100 d-flex flex-column align-items-center justify-content-center ${fileInfo.bg} bg-opacity-10`}
+                          >
+                            <i
+                              className={`bi ${fileInfo.icon} ${fileInfo.color} display-1`}
+                            ></i>
+                            <span
+                              className={`fw-bold mt-2 text-uppercase small ${fileInfo.color}`}
+                            >
+                              {file.fileType?.split("/")[1] || "FILE"}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Status Badge */}
-                      <div className="mb-4">
-                        <span
-                          className={`badge rounded-pill ${file.status === "PENDING" ? "bg-warning text-dark" : "bg-success"}`}
-                        >
-                          {file.status}
-                        </span>
+                      <div className="ratio ratio-16x9 bg-light d-flex align-items-center justify-content-center border-bottom">
+                        {renderPreview(file)}
                       </div>
 
-                      {/* Footer: Action Buttons */}
-                      <div className="d-flex gap-2 border-top pt-3">
-                        <button
-                          className="btn btn-primary btn-sm flex-grow-1"
-                          onClick={() => handlePrint(file.id)}
-                        >
-                          <i className="bi bi-printer-fill me-1"></i> Print
-                        </button>
-                        <button
-                          className="btn btn-outline-dark btn-sm"
-                          onClick={() =>
-                            handleDownload(file.id, file.originalFileName)
-                          }
-                        >
-                          <i className="bi bi-download"></i>
-                        </button>
-                        <button
-                          className="btn btn-outline-danger btn-sm"
-                          onClick={() => handleDelete(file.id)}
-                        >
-                          <i className="bi bi-trash"></i>
-                        </button>
+                      <div className="card-body p-4">
+                        {/* Header: Icon + Name */}
+                        <div className="d-flex align-items-center mb-3">
+                          <div
+                            className={`${fileInfo.bg} bg-opacity-10 p-2 rounded-3 me-3 ${fileInfo.color}`}
+                          >
+                            <i className={`bi ${fileInfo.icon} h4 mb-0`}></i>
+                          </div>
+                          <div className="overflow-hidden">
+                            <h6
+                              className="fw-bold mb-0 text-truncate"
+                              title={file.originalFileName}
+                            >
+                              {file.originalFileName}
+                            </h6>
+                            <small className="text-muted text-uppercase">
+                              {(file.fileSize / 1024).toFixed(2)} KB
+                            </small>
+                          </div>
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="mb-4">
+                          <span
+                            className={`badge rounded-pill ${file.status === "PENDING" ? "bg-warning text-dark" : "bg-success"}`}
+                          >
+                            <i
+                              className={`bi ${file.status === "PENDING" ? "bi-clock" : "bi-check-circle"} me-1`}
+                            ></i>
+                            {file.status}
+                          </span>
+                        </div>
+
+                        {/* Footer: Action Buttons */}
+                        <div className="d-flex gap-2 border-top pt-3">
+                          <button
+                            className="btn btn-primary btn-sm flex-grow-1"
+                            onClick={() => handlePrint(file.id)}
+                          >
+                            <i className="bi bi-printer-fill me-1"></i> Print
+                          </button>
+                          <button
+                            className="btn btn-outline-dark btn-sm"
+                            onClick={() =>
+                              handleDownload(file.id, file.originalFileName)
+                            }
+                          >
+                            <i className="bi bi-download"></i>
+                          </button>
+                          <button
+                            className="btn btn-outline-danger btn-sm"
+                            onClick={() => handleDelete(file.id)}
+                          >
+                            <i className="bi bi-trash"></i>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
           )}
         </div>
 
-        {/* QR Code Modal*/}
+        {/* QR Code Modal */}
         <QRCodeModal
           uniqueCode={uniqueCode}
           cafeName={localStorage.getItem("cafeName")}
