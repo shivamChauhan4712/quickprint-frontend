@@ -218,81 +218,22 @@ export function Dashboard() {
 
   function getFileIcon(type) {
     const fileType = type?.toLowerCase() || "";
-
-    // 1. Images (JPEG, PNG, WEBP, AVIF)
-    if (fileType.includes("image")) {
-      return {
-        icon: "bi-file-earmark-image-fill",
-        color: "text-info",
-        bg: "bg-info",
-      };
-    }
-    // 2. PDF
-    else if (fileType.includes("pdf")) {
-      return {
-        icon: "bi-file-earmark-pdf-fill",
-        color: "text-danger",
-        bg: "bg-danger",
-      };
-    }
-    // 3. Word (.doc, .docx, .rtf)
-    else if (
-      fileType.includes("word") ||
-      fileType.includes("officedocument.wordprocessingml") ||
-      fileType.includes("rtf")
-    ) {
-      return {
-        icon: "bi-file-earmark-word-fill",
-        color: "text-primary",
-        bg: "bg-primary",
-      };
-    }
-    // 4. Excel (.xls, .xlsx, csv)
-    else if (
-      fileType.includes("excel") ||
-      fileType.includes("spreadsheetml") ||
-      fileType.includes("csv") ||
-      fileType.includes("ms-excel")
-    ) {
-      return {
-        icon: "bi-file-earmark-spreadsheet-fill",
-        color: "text-success",
-        bg: "bg-success",
-      };
-    }
-    // 5. PowerPoint (.ppt, .pptx)
-    else if (
-      fileType.includes("presentationml") ||
-      fileType.includes("powerpoint")
-    ) {
-      return {
-        icon: "bi-file-earmark-ppt-fill",
-        color: "text-warning",
-        bg: "bg-warning",
-      };
-    }
-    // 6. Plain Text / Markdown
-    else if (fileType.includes("text") || fileType.includes("markdown")) {
-      return {
-        icon: "bi-file-earmark-text-fill",
-        color: "text-secondary",
-        bg: "bg-secondary",
-      };
-    }
-    // Default for others
-    else {
-      return {
-        icon: "bi-file-earmark-fill",
-        color: "text-dark",
-        bg: "bg-dark",
-      };
-    }
+    if (fileType.includes("image")) return { icon: "bi-file-earmark-image-fill", color: "text-info", bg: "bg-info" };
+    if (fileType.includes("pdf")) return { icon: "bi-file-earmark-pdf-fill", color: "text-danger", bg: "bg-danger" };
+    if (fileType.includes("word") || fileType.includes("officedocument.wordprocessingml")) 
+        return { icon: "bi-file-earmark-word-fill", color: "text-primary", bg: "bg-primary" };
+    if (fileType.includes("excel") || fileType.includes("spreadsheetml") || fileType.includes("csv")) 
+        return { icon: "bi-file-earmark-spreadsheet-fill", color: "text-success", bg: "bg-success" };
+    if (fileType.includes("presentationml") || fileType.includes("powerpoint")) 
+        return { icon: "bi-file-earmark-ppt-fill", color: "text-warning", bg: "bg-warning" };
+    return { icon: "bi-file-earmark-fill", color: "text-secondary", bg: "bg-secondary" };
   }
 
+  // Purely Visual Preview
   const renderPreview = (file) => {
     const fileUrl = `${import.meta.env.VITE_API_BASE_URL}/api/file/download/${file.id}`;
     const type = file.fileType?.toLowerCase() || "";
-    const fileInfo = getFileIcon(type); // Icon info yahan se le lenge
+    const fileInfo = getFileIcon(type);
 
     if (type.includes("image")) {
       return (
@@ -300,44 +241,32 @@ export function Dashboard() {
           src={fileUrl}
           className="img-fluid object-fit-cover h-100 w-100"
           alt="preview"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            e.target.parentElement.innerHTML = `<i class="bi ${fileInfo.icon} display-1 ${fileInfo.color}"></i>`;
+          }}
         />
       );
     }
 
-    if (
-      type.includes("pdf") ||
-      type.includes("word") ||
-      type.includes("spreadsheet") ||
-      type.includes("officedocument")
-    ) {
-      const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
-      return (
-        <iframe
-          src={googleViewerUrl}
-          style={{ width: "100%", height: "100%", border: "none" }}
-          title="preview"
-        />
-      );
-    }
-
+    // Document Preview
     return (
-      <i className={`bi ${fileInfo.icon} display-1 ${fileInfo.color}`}></i>
+      <div className={`w-100 h-100 d-flex flex-column align-items-center justify-content-center ${fileInfo.bg} bg-opacity-10`}>
+        <i className={`bi ${fileInfo.icon} ${fileInfo.color} display-1`}></i>
+        <span className={`fw-bold mt-2 text-uppercase small ${fileInfo.color}`}>
+          {file.fileType?.split("/")[1] || "FILE"}
+        </span>
+      </div>
     );
   };
 
   return (
     <div className="bg-light min-vh-100">
       <Navbar />
-
       <div className="container py-4">
-        {/* Header Section */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="fw-bold text-dark">Recent Print Requests</h2>
-          <button
-            className="btn btn-dark shadow-sm"
-            data-bs-toggle="modal"
-            data-bs-target="#qrModal"
-          >
+          <button className="btn btn-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#qrModal">
             <i className="bi bi-qr-code me-2"></i> View QR Code
           </button>
         </div>
@@ -357,31 +286,24 @@ export function Dashboard() {
             files
               .filter((file) => file.status !== "DELETED")
               .map((file) => {
-                // fetching icon details based on file type
                 const fileInfo = getFileIcon(file.fileType);
-
                 return (
                   <div key={file.id} className="col-12 col-md-6 col-lg-4">
                     <div className="card h-100 border-0 shadow-sm hover-shadow transition overflow-hidden">
-                      {/* --- SIRF EK PREVIEW SECTION RAKHO --- */}
+                      
+                      {/* 1. Preview Section */}
                       <div className="ratio ratio-16x9 bg-light d-flex align-items-center justify-content-center border-bottom">
-                        {/* Ab renderPreview handle karega ki image dikhani hai ya Google Viewer */}
                         {renderPreview(file)}
                       </div>
 
                       <div className="card-body p-4">
-                        {/* Header: Icon + Name */}
+                        {/* 2. File Name Section */}
                         <div className="d-flex align-items-center mb-3">
-                          <div
-                            className={`${fileInfo.bg} bg-opacity-10 p-2 rounded-3 me-3 ${fileInfo.color}`}
-                          >
+                          <div className={`${fileInfo.bg} bg-opacity-10 p-2 rounded-3 me-3 ${fileInfo.color}`}>
                             <i className={`bi ${fileInfo.icon} h4 mb-0`}></i>
                           </div>
                           <div className="overflow-hidden">
-                            <h6
-                              className="fw-bold mb-0 text-truncate"
-                              title={file.originalFileName}
-                            >
+                            <h6 className="fw-bold mb-0 text-truncate" title={file.originalFileName}>
                               {file.originalFileName}
                             </h6>
                             <small className="text-muted text-uppercase">
@@ -390,38 +312,23 @@ export function Dashboard() {
                           </div>
                         </div>
 
-                        {/* Status Badge */}
+                        {/* 3. Status Badge */}
                         <div className="mb-4">
-                          <span
-                            className={`badge rounded-pill ${file.status === "PENDING" ? "bg-warning text-dark" : "bg-success"}`}
-                          >
-                            <i
-                              className={`bi ${file.status === "PENDING" ? "bi-clock" : "bi-check-circle"} me-1`}
-                            ></i>
+                          <span className={`badge rounded-pill ${file.status === "PENDING" ? "bg-warning text-dark" : "bg-success"}`}>
+                            <i className={`bi ${file.status === "PENDING" ? "bi-clock" : "bi-check-circle"} me-1`}></i>
                             {file.status}
                           </span>
                         </div>
 
-                        {/* Footer: Action Buttons */}
+                        {/* 4. Action Buttons */}
                         <div className="d-flex gap-2 border-top pt-3">
-                          <button
-                            className="btn btn-primary btn-sm flex-grow-1"
-                            onClick={() => handlePrint(file.id)}
-                          >
+                          <button className="btn btn-primary btn-sm flex-grow-1" onClick={() => handlePrint(file.id)}>
                             <i className="bi bi-printer-fill me-1"></i> Print
                           </button>
-                          <button
-                            className="btn btn-outline-dark btn-sm"
-                            onClick={() =>
-                              handleDownload(file.id, file.originalFileName)
-                            }
-                          >
+                          <button className="btn btn-outline-dark btn-sm" onClick={() => handleDownload(file.id, file.originalFileName)}>
                             <i className="bi bi-download"></i>
                           </button>
-                          <button
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={() => handleDelete(file.id)}
-                          >
+                          <button className="btn btn-outline-danger btn-sm" onClick={() => handleDelete(file.id)}>
                             <i className="bi bi-trash"></i>
                           </button>
                         </div>
@@ -433,11 +340,7 @@ export function Dashboard() {
           )}
         </div>
 
-        {/* QR Code Modal */}
-        <QRCodeModal
-          uniqueCode={uniqueCode}
-          cafeName={localStorage.getItem("cafeName")}
-        />
+        <QRCodeModal uniqueCode={uniqueCode} cafeName={localStorage.getItem("cafeName")} />
       </div>
     </div>
   );
