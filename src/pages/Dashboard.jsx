@@ -377,7 +377,7 @@ export function Dashboard() {
               )}
             </div>
           ) : (
-            currentFiles.map((file) => {
+            currentFiles.map((file) => (
               <FileItem
                 key={file.id}
                 file={file}
@@ -387,8 +387,8 @@ export function Dashboard() {
                 handleDownload={handleDownload}
                 handleDelete={handleDelete}
                 formatFileSize={formatFileSize}
-              />;
-            })
+              />
+            ))
           )}
         </div>
 
