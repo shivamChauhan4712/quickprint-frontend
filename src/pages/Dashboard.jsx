@@ -5,10 +5,13 @@ import SockJS from "sockjs-client";
 import Stomp from "stompjs";
 import { QRCodeModal } from "../components/QRCodeModal";
 import Swal from "sweetalert2";
+import { SearchBar } from "../components/SearchBar";
 
 export function Dashboard() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+
   const uniqueCode = localStorage.getItem("uniqueCode");
 
   // 1. Fetch all files for this cafe
@@ -315,6 +318,7 @@ export function Dashboard() {
             <i className="bi bi-qr-code me-2"></i> View QR Code
           </button>
         </div>
+        <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
         <div className="row g-4">
           {loading ? (
