@@ -11,6 +11,8 @@ export function Dashboard() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const filesPerPage = 6; // <- no. of cards per page
 
   const uniqueCode = localStorage.getItem("uniqueCode");
 
@@ -323,6 +325,17 @@ export function Dashboard() {
       file.originalFileName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+  // Pagination Calculation
+  const indexOfLastFile = currentPage * filesPerPage;
+  const indexOfFirstFile = indexOfLastFile - filesPerPage;
+  const currentFiles = filteredFiles.slice(indexOfFirstFile, indexOfLastFile);
+  const totalPages = Math.ceil(filteredFiles.length / filesPerPage);
+
+  // while search go back to page 1
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
     <div className="bg-light min-vh-100">
       <Navbar />
@@ -365,7 +378,7 @@ export function Dashboard() {
               )}
             </div>
           ) : (
-            filteredFiles.map((file) => {
+            currentFiles.map((file) => {
               const fileInfo = getFileIcon(file.fileType);
               return (
                 <div key={file.id} className="col-12 col-md-6 col-lg-4">
@@ -438,6 +451,51 @@ export function Dashboard() {
             })
           )}
         </div>
+
+        {/* Pagination controls */}
+        {totalPages > 1 && (
+          <div className="d-flex justify-content-center mt-5">
+            <nav>
+              <ul className="pagination shadow-sm">
+                <li
+                  className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+                >
+                  <button
+                    className="page-link"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                  >
+                    Previous
+                  </button>
+                </li>
+
+                {[...Array(totalPages)].map((_, index) => (
+                  <li
+                    key={index}
+                    className={`page-item ${currentPage === index + 1 ? "active" : ""}`}
+                  >
+                    <button
+                      className="page-link"
+                      onClick={() => setCurrentPage(index + 1)}
+                    >
+                      {index + 1}
+                    </button>
+                  </li>
+                ))}
+
+                <li
+                  className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+                >
+                  <button
+                    className="page-link"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                  >
+                    Next
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        )}
 
         <QRCodeModal
           uniqueCode={uniqueCode}
