@@ -304,6 +304,12 @@ export function Dashboard() {
     );
   };
 
+  const filteredFiles = files.filter(
+    (file) =>
+      file.status !== "DELETED" &&
+      file.originalFileName.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
   return (
     <div className="bg-light min-vh-100">
       <Navbar />
@@ -326,14 +332,27 @@ export function Dashboard() {
               <div className="spinner-border text-primary"></div>
               <p className="mt-2 text-muted">Loading files...</p>
             </div>
-          ) : files.length === 0 ? (
-            <div className="col-12 text-center py-5">
-              <i className="bi bi-inbox text-muted h1"></i>
-              <p className="text-muted mt-2">No pending print requests.</p>
+          ) : filteredFiles.length === 0 ? (
+            <div className="col-12 text-center py-5 text-muted">
+              <i
+                className={`bi ${searchTerm ? "bi-search" : "bi-inbox"} display-1`}
+              ></i>
+              <p className="mt-3 fs-5">
+                {searchTerm
+                  ? `No files found matching "${searchTerm}"`
+                  : "No pending print requests."}
+              </p>
+              {searchTerm && (
+                <button
+                  className="btn btn-link text-primary"
+                  onClick={() => setSearchTerm("")}
+                >
+                  Clear search
+                </button>
+              )}
             </div>
           ) : (
-            files
-              .filter((file) => file.status !== "DELETED")
+            filteredFiles
               .map((file) => {
                 const fileInfo = getFileIcon(file.fileType);
                 return (
