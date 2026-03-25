@@ -116,16 +116,14 @@ export function Dashboard() {
     if (result.isConfirmed) {
       try {
         // Backend status update to DELETED
-        await api.patch(`/api/file/${id}/status`, null, {
-          params: { status: "DELETED" },
-        });
+        await api.delete(`/api/file/delete/${id}`);
 
         // Instantly remove from UI
         setFiles((prevFiles) => prevFiles.filter((file) => file.id !== id));
 
         Swal.fire({
           title: "Deleted!",
-          text: "The file has been successfully removed.",
+          text: "This file has been successfully removed.",
           icon: "success",
           timer: 1500,
           showConfirmButton: false,
