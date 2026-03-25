@@ -264,9 +264,28 @@ export function Dashboard() {
       bg: "bg-secondary",
     };
   }
+  function formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return "0 Bytes";
+
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+
+    // Logic: Logarithm for determining the index of the size unit
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    // formatting size (2 decimal points)
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  }
+
+  function getFileTypeLabel(type) {
+    if (type?.includes("wordprocessingml")) return "DOCX";
+    if (type?.includes("spreadsheetml")) return "EXCEL";
+    if (type?.includes("presentationml")) return "PPTX";
+    return type?.split("/")[1]?.toUpperCase() || "FILE";
+  }
 
   // Purely Visual Preview
-  const renderPreview = (file) => {
+  function renderPreview(file) {
     const fileUrl = `${import.meta.env.VITE_API_BASE_URL}/api/file/download/${file.id}`;
     const type = file.fileType?.toLowerCase() || "";
     const fileInfo = getFileIcon(type);
@@ -292,17 +311,11 @@ export function Dashboard() {
       >
         <i className={`bi ${fileInfo.icon} ${fileInfo.color} display-1`}></i>
         <span className={`fw-bold mt-2 text-uppercase small ${fileInfo.color}`}>
-          {file.fileType?.includes("wordprocessingml")
-            ? "DOCX"
-            : file.fileType?.includes("spreadsheetml")
-              ? "EXCEL"
-              : file.fileType?.includes("presentationml")
-                ? "PPTX"
-                : file.fileType?.split("/")[1]?.toUpperCase() || "FILE"}
+          {getFileTypeLabel(file.fileType)} • {formatFileSize(file.fileSize)}
         </span>
       </div>
     );
-  };
+  }
 
   const filteredFiles = files.filter(
     (file) =>
@@ -352,78 +365,77 @@ export function Dashboard() {
               )}
             </div>
           ) : (
-            filteredFiles
-              .map((file) => {
-                const fileInfo = getFileIcon(file.fileType);
-                return (
-                  <div key={file.id} className="col-12 col-md-6 col-lg-4">
-                    <div className="card h-100 border-0 shadow-sm hover-shadow transition overflow-hidden">
-                      {/* 1. Preview Section */}
-                      <div className="ratio ratio-16x9 bg-light d-flex align-items-center justify-content-center border-bottom">
-                        {renderPreview(file)}
+            filteredFiles.map((file) => {
+              const fileInfo = getFileIcon(file.fileType);
+              return (
+                <div key={file.id} className="col-12 col-md-6 col-lg-4">
+                  <div className="card h-100 border-0 shadow-sm hover-shadow transition overflow-hidden">
+                    {/* 1. Preview Section */}
+                    <div className="ratio ratio-16x9 bg-light d-flex align-items-center justify-content-center border-bottom">
+                      {renderPreview(file)}
+                    </div>
+
+                    <div className="card-body p-4">
+                      {/* 2. File Name Section */}
+                      <div className="d-flex align-items-center mb-3">
+                        <div
+                          className={`${fileInfo.bg} bg-opacity-10 p-2 rounded-3 me-3 ${fileInfo.color}`}
+                        >
+                          <i className={`bi ${fileInfo.icon} h4 mb-0`}></i>
+                        </div>
+                        <div className="overflow-hidden">
+                          <h6
+                            className="fw-bold mb-0 text-truncate"
+                            title={file.originalFileName}
+                          >
+                            {file.originalFileName}
+                          </h6>
+                          <small className="text-muted text-uppercase">
+                            {formatFileSize(file.fileSize)}
+                          </small>
+                        </div>
                       </div>
 
-                      <div className="card-body p-4">
-                        {/* 2. File Name Section */}
-                        <div className="d-flex align-items-center mb-3">
-                          <div
-                            className={`${fileInfo.bg} bg-opacity-10 p-2 rounded-3 me-3 ${fileInfo.color}`}
-                          >
-                            <i className={`bi ${fileInfo.icon} h4 mb-0`}></i>
-                          </div>
-                          <div className="overflow-hidden">
-                            <h6
-                              className="fw-bold mb-0 text-truncate"
-                              title={file.originalFileName}
-                            >
-                              {file.originalFileName}
-                            </h6>
-                            <small className="text-muted text-uppercase">
-                              {(file.fileSize / 1024).toFixed(2)} KB
-                            </small>
-                          </div>
-                        </div>
+                      {/* 3. Status Badge */}
+                      <div className="mb-4">
+                        <span
+                          className={`badge rounded-pill ${file.status === "PENDING" ? "bg-warning text-dark" : "bg-success"}`}
+                        >
+                          <i
+                            className={`bi ${file.status === "PENDING" ? "bi-clock" : "bi-check-circle"} me-1`}
+                          ></i>
+                          {file.status}
+                        </span>
+                      </div>
 
-                        {/* 3. Status Badge */}
-                        <div className="mb-4">
-                          <span
-                            className={`badge rounded-pill ${file.status === "PENDING" ? "bg-warning text-dark" : "bg-success"}`}
-                          >
-                            <i
-                              className={`bi ${file.status === "PENDING" ? "bi-clock" : "bi-check-circle"} me-1`}
-                            ></i>
-                            {file.status}
-                          </span>
-                        </div>
-
-                        {/* 4. Action Buttons */}
-                        <div className="d-flex gap-2 border-top pt-3">
-                          <button
-                            className="btn btn-primary btn-sm flex-grow-1"
-                            onClick={() => handlePrint(file.id)}
-                          >
-                            <i className="bi bi-printer-fill me-1"></i> Print
-                          </button>
-                          <button
-                            className="btn btn-outline-dark btn-sm"
-                            onClick={() =>
-                              handleDownload(file.id, file.originalFileName)
-                            }
-                          >
-                            <i className="bi bi-download"></i>
-                          </button>
-                          <button
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={() => handleDelete(file.id)}
-                          >
-                            <i className="bi bi-trash"></i>
-                          </button>
-                        </div>
+                      {/* 4. Action Buttons */}
+                      <div className="d-flex gap-2 border-top pt-3">
+                        <button
+                          className="btn btn-primary btn-sm flex-grow-1"
+                          onClick={() => handlePrint(file.id)}
+                        >
+                          <i className="bi bi-printer-fill me-1"></i> Print
+                        </button>
+                        <button
+                          className="btn btn-outline-dark btn-sm"
+                          onClick={() =>
+                            handleDownload(file.id, file.originalFileName)
+                          }
+                        >
+                          <i className="bi bi-download"></i>
+                        </button>
+                        <button
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => handleDelete(file.id)}
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
                       </div>
                     </div>
                   </div>
-                );
-              })
+                </div>
+              );
+            })
           )}
         </div>
 
