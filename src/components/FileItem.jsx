@@ -1,5 +1,7 @@
 export function FileItem({
   file,
+  toggleSelect,
+  isSelected,
   getFileIcon,
   renderPreview,
   handlePrint,
@@ -9,7 +11,17 @@ export function FileItem({
 }) {
   const fileInfo = getFileIcon(file.fileType);
   return (
-    <div key={file.id} className="col-12 col-md-6 col-lg-4">
+    <div key={file.id} className="col-12 col-md-6 col-lg-4 position-relative">
+      {/* Checkbox Overlay */}
+      <div className="position-absolute top-0 start-0 m-3" style={{ zIndex: 20 }}>
+        <input
+          type="checkbox"
+          className="form-check-input shadow-sm border-primary p-2 cursor-pointer"
+          checked={isSelected}
+          onChange={() => toggleSelect(file.id)}
+          style={{ width: '1.4rem', height: '1.4rem' }}
+        />
+      </div>
       <div className="card h-100 border-0 shadow-sm hover-shadow transition overflow-hidden">
         {/* 1. Preview Section */}
         <div className="ratio ratio-16x9 bg-light d-flex align-items-center justify-content-center border-bottom">

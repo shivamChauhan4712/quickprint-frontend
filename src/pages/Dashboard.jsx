@@ -8,12 +8,14 @@ import Swal from "sweetalert2";
 import { SearchBar } from "../components/SearchBar";
 import { FileItem } from "../components/FileItem";
 import { FilterBadges } from "../components/FilterBadges";
+import { SelectionBar } from "../components/SelectionBar";
 
 export function Dashboard() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [selectedFileIds, setSelectedFileIds] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const filesPerPage = 6; // <- no. of cards per page
 
@@ -241,6 +243,76 @@ export function Dashboard() {
     }
   }
 
+  // for individual select logic
+  const handleToggleSelect = (id) => {
+    setSelectedFileIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((itemId) => itemId !== id)
+        : [...prev, id],
+    );
+  };
+
+  // for select all logic to select all files in the current page
+  const handleSelectAll = () => {
+    // Check: are all the files of the current page selected?
+    const allSelectedOnPage = currentFiles.every((f) =>
+      selectedFileIds.includes(f.id),
+    );
+
+    if (allSelectedOnPage) {
+      // if all selected, filter out only the IDs belonging to the current page.
+      const currentIds = currentFiles.map((f) => f.id);
+      setSelectedFileIds((prev) =>
+        prev.filter((id) => !currentIds.includes(id)),
+      );
+    } else {
+      // If not all are selected, merge all IDs from the current page while removing duplicates.
+      const currentIds = currentFiles.map((f) => f.id);
+      setSelectedFileIds((prev) => [...new Set([...prev, ...currentIds])]);
+    }
+  };
+
+  // Bulk Delete Logic
+  const handleBulkDelete = async () => {
+    const result = await Swal.fire({
+      title: `Delete ${selectedFileIds.length} files?`,
+      text: "Ye files folder se hamesha ke liye delete ho jayengi!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      confirmButtonText: "Yes, Delete All",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        // Backend call to delete multiple files
+        await api.delete("/api/file/delete-bulk", {
+          params: { ids: selectedFileIds.join(",") },
+        });
+
+        // UI Update
+        setFiles((prev) => prev.filter((f) => !selectedFileIds.includes(f.id)));
+        setSelectedFileIds([]); // empty the Selection
+
+        Swal.fire("Deleted!", "Selected files have been removed.", "success");
+      } catch (err) {
+        console.error("Bulk delete error:", err);
+        Swal.fire("Error", "Bulk delete fail ho gaya.", "error");
+      }
+    }
+  };
+
+  // Bulk Download Logic (Ek-ek karke download trigger karega)
+  const handleBulkDownload = () => {
+    selectedFileIds.forEach((id, index) => {
+      const file = files.find((f) => f.id === id);
+      // 500ms ka gap dete hain taaki browser block na kare
+      setTimeout(() => {
+        handleDownload(id, file.originalFileName);
+      }, index * 500);
+    });
+  };
+
   function getFileIcon(type) {
     const fileType = type?.toLowerCase() || "";
     if (fileType.includes("image"))
@@ -386,6 +458,34 @@ export function Dashboard() {
           setStatusFilter={setStatusFilter}
         />
 
+        {/* --- Select All Checkbox Yahan Jodo --- */}
+        {currentFiles.length > 0 && (
+          <div className="d-flex align-items-center mb-3 ps-2">
+            <div className="form-check">
+              <input
+                type="checkbox"
+                className="form-check-input border-primary shadow-sm"
+                id="selectAllCheck"
+                // Check tab hoga jab current page ki sabhi files selected honge
+                checked={
+                  currentFiles.length > 0 &&
+                  currentFiles.every((f) => selectedFileIds.includes(f.id))
+                }
+                onChange={handleSelectAll}
+              />
+              <label
+                className="form-check-label small fw-bold text-muted cursor-pointer ms-2"
+                htmlFor="selectAllCheck"
+              >
+                {selectedFileIds.length === currentFiles.length &&
+                currentFiles.length > 0
+                  ? "Unselect All"
+                  : `Select All (${currentFiles.length} files on this page)`}
+              </label>
+            </div>
+          </div>
+        )}
+
         <div className="row g-4">
           {loading ? (
             <div className="col-12 text-center py-5">
@@ -416,6 +516,8 @@ export function Dashboard() {
               <FileItem
                 key={file.id}
                 file={file}
+                isSelected={selectedFileIds.includes(file.id)}
+                onToggle={handleToggleSelect}
                 getFileIcon={getFileIcon}
                 renderPreview={renderPreview}
                 handlePrint={handlePrint}
@@ -471,6 +573,13 @@ export function Dashboard() {
             </nav>
           </div>
         )}
+
+        <SelectionBar
+          selectedCount={selectedFileIds.length}
+          onDownload={handleBulkDownload}
+          onDelete={handleBulkDelete}
+          onClear={() => setSelectedFileIds([])}
+        />
 
         <QRCodeModal
           uniqueCode={uniqueCode}
