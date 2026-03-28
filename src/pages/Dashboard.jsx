@@ -438,7 +438,7 @@ export function Dashboard() {
   }, [statusFilter, searchTerm]);
 
   return (
-    <div className="bg-light min-vh-100">
+    <div className="bg-light min-vh-100 pb-5">
       <Navbar />
       <div className="container py-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
