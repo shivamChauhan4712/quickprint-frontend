@@ -7,11 +7,13 @@ import { QRCodeModal } from "../components/QRCodeModal";
 import Swal from "sweetalert2";
 import { SearchBar } from "../components/SearchBar";
 import { FileItem } from "../components/FileItem";
+import { FilterBadges } from "../components/FilterBadges";
 
 export function Dashboard() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const filesPerPage = 6; // <- no. of cards per page
 
@@ -157,7 +159,7 @@ export function Dashboard() {
         );
       }
     }
-  };
+  }
 
   async function handlePrint(fileId) {
     try {
@@ -237,7 +239,7 @@ export function Dashboard() {
         "error",
       );
     }
-  };
+  }
 
   function getFileIcon(type) {
     const fileType = type?.toLowerCase() || "";
@@ -337,11 +339,20 @@ export function Dashboard() {
     );
   }
 
-  const filteredFiles = files.filter(
-    (file) =>
-      file.status !== "DELETED" &&
-      file.originalFileName.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredFiles = files.filter((file) => {
+    // 1. Search Logic: Does the file name match the search term?
+    const matchesSearch = file.originalFileName
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    // 2. Status Logic: Does the file status match the selected badge?
+    // (If the statusFilter is set to "ALL", matchesStatus should always be true.)
+    const matchesStatus =
+      statusFilter === "ALL" || file.status === statusFilter;
+
+    // 3. Final Return: The file must not be "DELETED", and both conditions (Search + Status) must be met.
+    return file.status !== "DELETED" && matchesSearch && matchesStatus;
+  });
 
   // Pagination Calculation
   const indexOfLastFile = currentPage * filesPerPage;
@@ -352,7 +363,7 @@ export function Dashboard() {
   // while search go back to page 1
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [statusFilter, searchTerm]);
 
   return (
     <div className="bg-light min-vh-100">
@@ -369,6 +380,11 @@ export function Dashboard() {
           </button>
         </div>
         <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        <FilterBadges
+          files={files}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+        />
 
         <div className="row g-4">
           {loading ? (
