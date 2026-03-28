@@ -1,6 +1,6 @@
 export function FileItem({
   file,
-  toggleSelect,
+  onToggle,
   isSelected,
   getFileIcon,
   renderPreview,
@@ -23,7 +23,7 @@ export function FileItem({
           checked={isSelected}
           onChange={(e) => {
             e.stopPropagation();
-            toggleSelect(file.id);
+            onToggle(file.id);
           }}
           style={{ width: "1.4rem", height: "1.4rem" }}
         />
