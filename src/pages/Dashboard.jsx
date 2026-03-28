@@ -9,8 +9,10 @@ import { SearchBar } from "../components/SearchBar";
 import { FileItem } from "../components/FileItem";
 import { FilterBadges } from "../components/FilterBadges";
 import { SelectionBar } from "../components/SelectionBar";
+import { useNavigate } from "react-router-dom";
 
 export function Dashboard() {
+  const navigate = useNavigate();
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,6 +37,11 @@ export function Dashboard() {
 
   // 2. WebSocket & Initial Load
   useEffect(() => {
+    const code = localStorage.getItem("uniqueCode");
+    if (!code) {
+      navigate("/"); // instantly send to landing page if no unique code found
+      return;
+    }
     fetchFiles();
 
     const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws-print`);
@@ -83,7 +90,7 @@ export function Dashboard() {
         });
       }
     };
-  }, [uniqueCode]);
+  }, [uniqueCode,navigate]);
 
   // 3. Download File Logic
   async function handleDownload(fileId, fileName) {

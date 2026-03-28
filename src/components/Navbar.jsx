@@ -1,12 +1,27 @@
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 export function Navbar(){
   const navigate = useNavigate();
   const cafeName = localStorage.getItem('cafeName') || 'Cafe';
 
-  const handleLogout = () => {
-    localStorage.clear(); // Token aur details delete karo
-    navigate('/login');
+const handleLogout = () => {
+    // 1. clearing the LocalStorage
+    localStorage.removeItem("uniqueCode");
+    localStorage.getItem("cafeName") && localStorage.removeItem("cafeName");
+    localStorage.removeItem("token"); 
+
+    // 2. User ko SweetAlert se bye-bye bolo (Professional feel)
+    Swal.fire({
+      title: "Logged Out!",
+      text: "You have been logged out successfully.",
+      icon: "success",
+      timer: 1500,
+      showConfirmButton: false
+    });
+
+    // 3. navigate to Landing page
+    navigate("/");
   };
 
   return (
