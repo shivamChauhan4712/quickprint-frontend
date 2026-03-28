@@ -13,13 +13,19 @@ export function FileItem({
   return (
     <div key={file.id} className="col-12 col-md-6 col-lg-4 position-relative">
       {/* Checkbox Overlay */}
-      <div className="position-absolute top-0 start-0 m-3" style={{ zIndex: 20 }}>
+      <div
+        className="position-absolute top-0 start-0 m-3"
+        style={{ zIndex: 100 }}
+      >
         <input
           type="checkbox"
           className="form-check-input shadow-sm border-primary p-2 cursor-pointer"
           checked={isSelected}
-          onChange={() => toggleSelect(file.id)}
-          style={{ width: '1.4rem', height: '1.4rem' }}
+          onChange={(e) => {
+            e.stopPropagation();
+            toggleSelect(file.id);
+          }}
+          style={{ width: "1.4rem", height: "1.4rem" }}
         />
       </div>
       <div className="card h-100 border-0 shadow-sm hover-shadow transition overflow-hidden">
