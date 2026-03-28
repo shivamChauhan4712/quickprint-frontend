@@ -82,7 +82,7 @@ export function Dashboard() {
   }, [uniqueCode]);
 
   // 3. Download File Logic
-  const handleDownload = async (fileId, fileName) => {
+  async function handleDownload(fileId, fileName) {
     try {
       const response = await api.get(`/api/file/download/${fileId}`, {
         responseType: "blob", // Important for file downloads
@@ -96,13 +96,32 @@ export function Dashboard() {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
+
+      try {
+        // update status to DOWNLOADED in backend
+        await api.patch(`/api/file/${fileId}/status`, null, {
+          params: { status: "DOWNLOADED" },
+        });
+
+        // update status in UI immediately
+        setFiles((prevFiles) =>
+          prevFiles.map((f) =>
+            f.id === fileId ? { ...f, status: "DOWNLOADED" } : f,
+          ),
+        );
+        console.log("Status updated to DOWNLOADED for file:", fileName);
+      } catch (StatusErr) {
+        console.error("File downloaded but status update failed:", StatusErr);
+      }
     } catch (err) {
-      alert("Error downloading file. Please try again.");
+      console.error("Download error:", err);
+      Swal.fire("Error", "Could not download the file.", "error");
     }
-  };
+  }
 
   // 4. Delete File Logic
-  const handleDelete = async (id) => {
+  async function handleDelete(id) {
     const result = await Swal.fire({
       title: "Are you sure?",
       text: "This file will be hidden from the dashboard.",
@@ -140,7 +159,7 @@ export function Dashboard() {
     }
   };
 
-  const handlePrint = async (fileId) => {
+  async function handlePrint(fileId) {
     try {
       const response = await api.get(`/api/file/download/${fileId}`, {
         responseType: "blob",

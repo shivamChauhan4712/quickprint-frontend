@@ -40,10 +40,22 @@ export function FileItem({
           {/* 3. Status Badge */}
           <div className="mb-4">
             <span
-              className={`badge rounded-pill ${file.status === "PENDING" ? "bg-warning text-dark" : "bg-success"}`}
+              className={`badge rounded-pill ${
+                file.status === "PENDING"
+                  ? "bg-warning text-dark"
+                  : file.status === "FAILED"
+                    ? "bg-danger"
+                    : "bg-success"
+              }`}
             >
               <i
-                className={`bi ${file.status === "PENDING" ? "bi-clock" : "bi-check-circle"} me-1`}
+                className={`bi ${
+                  file.status === "PENDING"
+                    ? "bi-clock"
+                    : file.status === "FAILED"
+                      ? "bi-exclamation-triangle"
+                      : "bi-check-circle"
+                } me-1`}
               ></i>
               {file.status}
             </span>
